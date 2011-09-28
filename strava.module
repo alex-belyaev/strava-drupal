@@ -1,0 +1,115 @@
+<?php
+
+  function strava_menu() {
+    $items = array();
+     $items['admin/config/strava'] = array(
+          'title' => 'Strava Config',
+          'page callback' => 'drupal_get_form',
+          'page arguments' => array('strava_admin_form'),
+          'access arguments' => array('administer Strava'),
+          'type' => MENU_NORMAL_ITEM
+     );
+     return $items;
+  }
+  
+  function strava_uninstall() {
+    variable_del('strava_club_id');
+    variable_del('strava_club_key');
+  }
+  
+
+
+  function strava_block_info() {
+    $blocks = array();
+
+    $blocks['club-summary'] = array(
+      'info' => t('Strava - Club - Summary'), 
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+
+    $blocks['club-activity'] = array(
+      'info' => t('Strava - Club - Activity'), 
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    
+    return $blocks;
+  };
+  
+
+  function strava_block_view($delta = ''){
+
+    if ($delta == 'club-summary') {
+      return strava_block_view_club_summary();
+    }
+
+    if ($delta == 'club-activity') {
+      return strava_block_view_club_activity();
+    }
+   
+  }
+  
+  function strava_block_view_club_summary() {
+    $block = array();
+    $strava_club_id = variable_get('strava_club_id');
+    $strava_club_key = variable_get('strava_club_key');
+    
+    $block['content'] = <<<EOF
+<iframe 
+  height='160'
+  width='300'
+  frameborder='0'
+  allowtransparency='true'
+  scrolling='no'
+  src='http://app.strava.com/clubs/${strava_club_id}/latest-rides/${strava_club_key}'>
+</iframe>
+EOF;
+    return $block;
+  }
+  
+  function strava_block_view_club_activity() {
+    $block = array();
+    $strava_club_id = variable_get('strava_club_id');
+    $strava_club_key = variable_get('strava_club_key');
+
+    $block['content'] = <<<EOF
+<iframe 
+  height='454'
+  width='300'
+  frameborder='0'
+  allowtransparency='true'
+  scrolling='no'
+  src='http://app.strava.com/clubs/${strava_club_id}/latest-rides/${strava_club_key}?show_rides=true'>
+</iframe>
+EOF;
+    return $block;
+  }
+  
+  function strava_admin_form() {
+
+    $form = array();
+    $form['strava_club_id'] = array(
+      '#type' => 'textfield', 
+      '#title' => t('Enter your Club ID'), 
+      '#size' => 50,
+      '#maxlength' => 50,
+      '#default_value' => variable_get('strava_club_id'),
+      '#description' => "Your club's Strava ID - e.g. 1586 / bobs-cycling-club"
+    );
+
+    $form['strava_club_key'] = array(
+      '#type' => 'textfield', 
+      '#title' => t('Enter your Club Key'),
+      '#size' => 40,
+      '#maxlength' => 40,
+      '#default_value' => variable_get('strava_club_key'),
+      '#description' => "Your club's Strava API key - e.g. cce1b93159bfbd65409639df0c027c271aba52b6"
+    );
+
+    return system_settings_form($form);
+  }
+  
+  function strava_block_save($delta = '', $edit = array()) {
+    variable_set('strava_club_id', $edit['strava_club_id']);
+    variable_set('strava_club_key', $edit['strava_club_key']);
+  }
+?>
